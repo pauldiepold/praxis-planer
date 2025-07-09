@@ -41,9 +41,7 @@
     ],
     "win": {
       "target": "portable",
-      "icon": "assets/icon.ico",
-      "sign": false,
-      "signAndEditExecutable": false
+      "icon": "assets/icon.ico"
     },
     "mac": {
       "target": "dmg",
@@ -53,9 +51,6 @@
     "linux": {
       "target": "AppImage",
       "icon": "assets/icon.png"
-    },
-    "forceCodeSigning": false,
-    "cscLink": null,
-    "cscKeyPassword": null
+    }
   }
 }
