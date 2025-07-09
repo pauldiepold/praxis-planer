@@ -37,7 +37,10 @@
     "files": [
       "**/*",
       "!node_modules/**/*",
-      "!dist/**/*"
+      "!dist/**/*",
+      "node_modules/dayjs/**/*",
+      "node_modules/lowdb/**/*",
+      "node_modules/daisyui/**/*"
     ],
     "win": {
       "target": "portable",
