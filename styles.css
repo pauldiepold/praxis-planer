@@ -1,0 +1,5 @@
+/* Navigation aktiv markieren */
+.nav-link.active {
+    background-color: hsl(var(--p));
+    color: hsl(var(--pc));
+} 

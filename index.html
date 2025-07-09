@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Praxis-Pflege-Planer - Kinderarztpraxis Holstein-Diepold</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-screen bg-base-100">
+    <!-- Navigation -->
+    <div class="navbar bg-base-200 shadow-lg">
+        <div class="navbar-start">
+            <div class="dropdown">
+                <div tabindex="0" role="button" class="btn btn-ghost lg:hidden">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" />
+                    </svg>
+                </div>
+                <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+                    <li><a onclick="showPage('calendar')" class="nav-link" data-page="calendar">Kalender</a></li>
+                    <li><a onclick="showPage('students')" class="nav-link" data-page="students">Schülerinnen</a></li>
+                    <li><a onclick="showPage('schools')" class="nav-link" data-page="schools">Pflegeschulen</a></li>
+                    <li><a onclick="showPage('companies')" class="nav-link" data-page="companies">Betriebe</a></li>
+                </ul>
+            </div>
+            <div class="flex items-center gap-3">
+                <div style="background-color: #374151; border-radius: 8px; padding: 8px;">
+                    <img src="assets/praxis-logo.svg" alt="Logo" class="w-10 h-10">
+                </div>
+                <div>
+                    <div class="font-bold text-lg">Praxis-Pflege-Planer</div>
+                    <div class="text-sm opacity-70">Kinderarztpraxis Holstein-Diepold / Dr. Diepold</div>
+                </div>
+            </div>
+        </div>
+        <div class="navbar-center hidden lg:flex">
+            <ul class="menu menu-horizontal px-1">
+                <li><a onclick="showPage('calendar')" class="nav-link" data-page="calendar">Kalender</a></li>
+                <li><a onclick="showPage('students')" class="nav-link" data-page="students">Schülerinnen</a></li>
+                <li><a onclick="showPage('schools')" class="nav-link" data-page="schools">Pflegeschulen</a></li>
+                <li><a onclick="showPage('companies')" class="nav-link" data-page="companies">Betriebe</a></li>
+            </ul>
+        </div>
+        <div class="navbar-end">
+            <!-- Leer für bessere Balance -->
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container mx-auto p-6">
+        <!-- Kalender Seite -->
+        <div id="calendar-page" class="page-content">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold">Jahresplaner</h1>
+                <div class="flex items-center gap-4">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Jahr</span>
+                        </label>
+                        <select id="yearSelector" onchange="updateYear()" class="select select-bordered">
+                            <option value="2026">2026</option>
+                            <option value="2027">2027</option>
+                            <option value="2028">2028</option>
+                            <option value="2029">2029</option>
+                            <option value="2030">2030</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Legend -->
+            <div class="card bg-base-200 mb-6">
+                <div class="card-body">
+                    <div class="flex justify-center gap-8">
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-success rounded"></div>
+                            <span>Frei</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-error rounded"></div>
+                            <span>Belegt</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-warning rounded"></div>
+                            <span>Urlaub</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar Container -->
+            <div id="calendarContainer" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                <!-- Kalender wird hier dynamisch generiert -->
+            </div>
+            
+            <!-- Trennelement -->
+            <div class="divider my-8"></div>
+            
+            <!-- Jahr hinzufügen Button -->
+            <div class="flex justify-center">
+                <button onclick="addYear()" class="btn btn-outline btn-primary" id="addYearButton">
+                    <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Jahr hinzufügen
+                </button>
+            </div>
+        </div>
+
+        <!-- Schülerinnen Seite -->
+        <div id="students-page" class="page-content hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold">Schülerinnen</h1>
+                <button onclick="addNewStudentFromList()" class="btn btn-primary">
+                    <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Neue Schülerin
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="table table-zebra">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Pflegeschule</th>
+                            <th>Betrieb</th>
+                            <th>Telefon</th>
+                            <th>E-Mail</th>
+                            <th>Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentsTableBody">
+                        <!-- Schülerinnen werden hier dynamisch geladen -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pflegeschulen Seite -->
+        <div id="schools-page" class="page-content hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold">Pflegeschulen</h1>
+                <button onclick="addNewSchoolFromList()" class="btn btn-primary">
+                    <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Neue Schule
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="table table-zebra">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Ansprechpartner</th>
+                            <th>Telefon</th>
+                            <th>E-Mail</th>
+                            <th>Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody id="schoolsTableBody">
+                        <!-- Schulen werden hier dynamisch geladen -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Betriebe Seite -->
+        <div id="companies-page" class="page-content hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold">Betriebe</h1>
+                <button onclick="addNewCompanyFromList()" class="btn btn-primary">
+                    <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Neuer Betrieb
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="table table-zebra">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Ansprechpartner</th>
+                            <th>Telefon</th>
+                            <th>E-Mail</th>
+                            <th>Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody id="companiesTableBody">
+                        <!-- Betriebe werden hier dynamisch geladen -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal für Wochenbearbeitung -->
+    <dialog id="weekModal" class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg" id="modalTitle">Woche bearbeiten</h3>
+            <div class="form-control w-full">
+                <label class="label">
+                    <span class="label-text">Status</span>
+                </label>
+                <select id="weekStatus" class="select select-bordered w-full">
+                    <option value="free">Frei</option>
+                    <option value="booked">Belegt</option>
+                    <option value="vacation">Urlaub</option>
+                </select>
+            </div>
+            <div class="form-control w-full" id="bookingFields" style="display: none;">
+                <label class="label">
+                    <span class="label-text">Schülerin</span>
+                </label>
+                <select id="studentSelect" class="select select-bordered w-full">
+                    <option value="">Bitte wählen...</option>
+                </select>
+                <button onclick="addNewStudent()" class="btn btn-sm btn-outline mt-2">+ Neue Schülerin</button>
+            </div>
+            <div class="form-control w-full">
+                <label class="label">
+                    <span class="label-text">Notizen</span>
+                </label>
+                <textarea id="weekNotes" class="textarea textarea-bordered" rows="3"></textarea>
+            </div>
+            <div class="modal-action">
+                <button onclick="saveWeek()" class="btn btn-primary">Speichern</button>
+                <button onclick="closeModal()" class="btn">Abbrechen</button>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Modal für neue Schülerin -->
+    <dialog id="studentModal" class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg" id="studentModalTitle">Neue Schülerin hinzufügen</h3>
+            <input type="hidden" id="editStudentId">
+            <div class="form-control w-full">
+                <label class="label">
+                    <span class="label-text">Name</span>
+                </label>
+                <input type="text" id="newStudentName" class="input input-bordered w-full" required>
+            </div>
+            <div class="form-control w-full">
+                <label class="label">
+                    <span class="label-text">Pflegeschule</span>
+                </label>
+                <select id="newStudentSchool" class="select select-bordered w-full">
+                    <option value="">Bitte wählen...</option>
+                </select>
+                <button onclick="addNewSchool()" class="btn btn-sm btn-outline mt-2">+ Neue Schule</button>
+            </div>
+            <div class="form-control w-full">
+                <label class="label">
+                    <span class="label-text">Betrieb</span>
+                </label>
+                <select id="newStudentCompany" class="select select-bordered w-full">
+                    <option value="">Bitte wählen...</option>
+                </select>
+                <button onclick="addNewCompany()" class="btn btn-sm btn-outline mt-2">+ Neuer Betrieb</button>
+            </div>
+            <div class="form-control w-full">
+                <label class="label">
+                    <span class="label-text">Telefon</span>
+                </label>
+                <input type="text" id="newStudentPhone" class="input input-bordered w-full">
+            </div>
+            <div class="form-control w-full">
+                <label class="label">
+                    <span class="label-text">E-Mail</span>
+                </label>
+                <input type="email" id="newStudentEmail" class="input input-bordered w-full">
+            </div>
+            <div class="modal-action">
+                <button onclick="saveStudent()" class="btn btn-primary">Speichern</button>
+                <button onclick="closeStudentModal()" class="btn">Abbrechen</button>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Modal für neue Schule -->
+    <dialog id="schoolModal" class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg" id="schoolModalTitle">Neue Schule hinzufügen</h3>
+            <input type="hidden" id="editSchoolId">
+            <div class="form-control w-full">
+                <label class="label">
+                    <span class="label-text">Name der Schule</span>
+                </label>
+                <input type="text" id="newSchoolName" class="input input-bordered w-full" required>
+            </div>
+            <div class="form-control w-full">
+                <label class="label">
+                    <span class="label-text">Ansprechpartner</span>
+                </label>
+                <input type="text" id="newSchoolContact" class="input input-bordered w-full">
+            </div>
+            <div class="form-control w-full">
+                <label class="label">
+                    <span class="label-text">Telefon</span>
+                </label>
+                <input type="text" id="newSchoolPhone" class="input input-bordered w-full">
+            </div>
+            <div class="form-control w-full">
+                <label class="label">
+                    <span class="label-text">E-Mail</span>
+                </label>
+                <input type="email" id="newSchoolEmail" class="input input-bordered w-full">
+            </div>
+            <div class="modal-action">
+                <button onclick="saveSchool()" class="btn btn-primary">Speichern</button>
+                <button onclick="closeSchoolModal()" class="btn">Abbrechen</button>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Modal für neuen Betrieb -->
+    <dialog id="companyModal" class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg" id="companyModalTitle">Neuen Betrieb hinzufügen</h3>
+            <input type="hidden" id="editCompanyId">
+            <div class="form-control w-full">
+                <label class="label">
+                    <span class="label-text">Name des Betriebs</span>
+                </label>
+                <input type="text" id="newCompanyName" class="input input-bordered w-full" required>
+            </div>
+            <div class="form-control w-full">
+                <label class="label">
+                    <span class="label-text">Ansprechpartner</span>
+                </label>
+                <input type="text" id="newCompanyContact" class="input input-bordered w-full">
+            </div>
+            <div class="form-control w-full">
+                <label class="label">
+                    <span class="label-text">Telefon</span>
+                </label>
+                <input type="text" id="newCompanyPhone" class="input input-bordered w-full">
+            </div>
+            <div class="form-control w-full">
+                <label class="label">
+                    <span class="label-text">E-Mail</span>
+                </label>
+                <input type="email" id="newCompanyEmail" class="input input-bordered w-full">
+            </div>
+            <div class="modal-action">
+                <button onclick="saveCompany()" class="btn btn-primary">Speichern</button>
+                <button onclick="closeCompanyModal()" class="btn">Abbrechen</button>
+            </div>
+        </div>
+    </dialog>
+
+    <script src="renderer.js"></script>
+</body>
+</html> 
