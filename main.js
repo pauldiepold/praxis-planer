@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const dayjs = require('dayjs');
 const weekOfYear = require('dayjs/plugin/weekOfYear');
 const isoWeek = require('dayjs/plugin/isoWeek');
@@ -7,27 +8,70 @@ const isoWeek = require('dayjs/plugin/isoWeek');
 dayjs.extend(weekOfYear);
 dayjs.extend(isoWeek);
 
+// Logging-Funktion
+function log(message) {
+  const logPath = path.join(__dirname, 'app.log');
+  const timestamp = new Date().toISOString();
+  const logMessage = `[${timestamp}] ${message}\n`;
+  
+  // In Konsole ausgeben
+  console.log(message);
+  
+  // In Datei schreiben
+  try {
+    fs.appendFileSync(logPath, logMessage);
+  } catch (error) {
+    console.error('Fehler beim Schreiben in Log-Datei:', error);
+  }
+}
+
 let mainWindow;
 let db;
 
 async function createWindow() {
-  mainWindow = new BrowserWindow({
-    width: 1400,
-    height: 900,
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
-      enableRemoteModule: true
-    },
-    icon: path.join(__dirname, 'assets/icon.png'),
-    title: 'Pflegeplaner - Kinderarztpraxis Holstein-Diepold'
-  });
+  try {
+    log('Erstelle BrowserWindow...');
+    mainWindow = new BrowserWindow({
+      width: 1400,
+      height: 900,
+      show: false,
+      webPreferences: {
+        nodeIntegration: true,
+        contextIsolation: false,
+        enableRemoteModule: true
+      },
+      icon: path.join(__dirname, 'assets/icon.png'),
+      title: 'Pflegeplaner - Kinderarztpraxis Holstein-Diepold'
+    });
 
-  mainWindow.loadFile('index.html');
+    const htmlPath = path.join(__dirname, 'index.html');
+    log('Lade HTML-Datei von:', htmlPath);
+    
+    // Prüfen ob HTML-Datei existiert
+    if (!fs.existsSync(htmlPath)) {
+      log('HTML-Datei nicht gefunden:', htmlPath);
+      throw new Error('HTML-Datei nicht gefunden');
+    }
 
-  // Entwicklertools im Entwicklungsmodus öffnen
-  if (process.argv.includes('--dev')) {
-    mainWindow.webContents.openDevTools();
+    mainWindow.loadFile(htmlPath);
+    log('HTML-Datei erfolgreich geladen');
+
+    // Fenster maximieren und dann anzeigen
+    mainWindow.maximize();
+    mainWindow.show();
+
+    // Fehlerbehandlung für das Laden
+    mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+      log('Fehler beim Laden der HTML-Datei:', errorCode, errorDescription);
+    });
+
+    mainWindow.webContents.on('did-finish-load', () => {
+      log('HTML-Datei erfolgreich geladen und gerendert');
+    });
+
+  } catch (error) {
+    log('Fehler beim Erstellen des Fensters:', error);
+    app.quit();
   }
 }
 
@@ -51,10 +95,10 @@ async function initializeDatabase() {
   
   // Seed-Daten hinzufügen wenn JSON-Datei nicht existiert
   if (!fileExists) {
-    console.log('JSON-Datei nicht gefunden. Initialisiere Datenbank mit Seed-Daten...');
+    log('JSON-Datei nicht gefunden. Initialisiere Datenbank mit Seed-Daten...');
     await seedDatabase();
   } else {
-    console.log('Datenbank bereits initialisiert');
+    log('Datenbank bereits initialisiert');
   }
 }
 
@@ -99,13 +143,13 @@ function generateWeeksForYear(year) {
     // Woche 53 existiert nicht für dieses Jahr
   }
   
-  console.log(`Generiert ${weeks.length} Wochen für Jahr ${year}`);
+  log(`Generiert ${weeks.length} Wochen für Jahr ${year}`);
   return weeks;
 }
 
 // Seed-Daten für die Datenbank
 async function seedDatabase() {
-  console.log('Starte Seeding der Datenbank...');
+  log('Starte Seeding der Datenbank...');
   
   // Schulen hinzufügen
   const schools = [
@@ -147,11 +191,11 @@ async function seedDatabase() {
   db.data.weeks = allWeeks;
   
   await db.write();
-  console.log(`Datenbank wurde mit Seed-Daten initialisiert:`);
-  console.log(`- ${schools.length} Schulen`);
-  console.log(`- ${companies.length} Betriebe`);
-  console.log(`- ${students.length} Schülerinnen`);
-  console.log(`- ${allWeeks.length} Wochen (Jahre 2026-2030)`);
+  log(`Datenbank wurde mit Seed-Daten initialisiert:`);
+  log(`- ${schools.length} Schulen`);
+  log(`- ${companies.length} Betriebe`);
+  log(`- ${students.length} Schülerinnen`);
+  log(`- ${allWeeks.length} Wochen (Jahre 2026-2030)`);
 }
 
 // IPC Handler für Datenbankoperationen
@@ -321,14 +365,33 @@ ipcMain.handle('get-week-details', async (event, year, weekNumber) => {
 });
 
 app.whenReady().then(async () => {
-  await initializeDatabase();
-  await createWindow();
+  try {
+    log('App ist bereit, initialisiere Datenbank...');
+    await initializeDatabase();
+    log('Datenbank initialisiert, erstelle Fenster...');
+    await createWindow();
+    log('Fenster erstellt');
 
-  app.on('activate', function () {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
-  });
+    app.on('activate', function () {
+      if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    });
+  } catch (error) {
+    log('Fehler bei der App-Initialisierung:', error);
+    app.quit();
+  }
 });
 
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit();
+});
+
+// Globale Fehlerbehandlung
+process.on('uncaughtException', (error) => {
+  log('Unbehandelter Fehler:', error);
+  app.quit();
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  log('Unbehandelte Promise-Ablehnung:', reason);
+  app.quit();
 }); 
