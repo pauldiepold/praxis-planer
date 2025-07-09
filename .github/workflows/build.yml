@@ -9,12 +9,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    
-    strategy:
-      matrix:
-        platform: [win32, darwin, linux]
-        arch: [x64]
+    runs-on: windows-latest
     
     steps:
     - name: Checkout code
@@ -30,23 +25,17 @@ jobs:
       run: npm ci
       
     - name: Build Electron app
-      run: npm run build
+      run: npm run build:win
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: pflege-planner-${{ matrix.platform }}-${{ matrix.arch }}
+        name: pflege-planner-windows-x64
         path: |
           dist/*.exe
-          dist/*.dmg
-          dist/*.AppImage
-          dist/*.deb
-          dist/*.rpm
           dist/win-unpacked/
-          dist/mac/
-          dist/linux-unpacked/
         retention-days: 30
         
     - name: Create Release
@@ -55,10 +44,6 @@ jobs:
       with:
         files: |
           dist/*.exe
-          dist/*.dmg
-          dist/*.AppImage
-          dist/*.deb
-          dist/*.rpm
         tag_name: v${{ github.run_number }}
         name: Release v${{ github.run_number }}
         body: |
@@ -66,8 +51,6 @@ jobs:
           
           ## Downloads
           - Windows: `.exe` installer
-          - macOS: `.dmg` disk image  
-          - Linux: `.AppImage` portable app
           
           ## Changes
           Built from commit: ${{ github.sha }}
