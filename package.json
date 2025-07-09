@@ -42,7 +42,8 @@
     "win": {
       "target": "portable",
       "icon": "assets/icon.ico",
-      "sign": false
+      "sign": false,
+      "signAndEditExecutable": false
     },
     "mac": {
       "target": "dmg",
