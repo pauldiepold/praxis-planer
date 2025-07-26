@@ -38,7 +38,9 @@ async function createWindow() {
       webPreferences: {
         nodeIntegration: true,
         contextIsolation: false,
-        enableRemoteModule: true
+        enableRemoteModule: true,
+        webSecurity: false,
+        allowRunningInsecureContent: true
       },
       icon: path.join(__dirname, 'assets/icon.png'),
       title: 'Pflegeplaner - Kinderarztpraxis Holstein-Diepold'
@@ -51,6 +53,16 @@ async function createWindow() {
     if (!fs.existsSync(htmlPath)) {
       log('HTML-Datei nicht gefunden:', htmlPath);
       throw new Error('HTML-Datei nicht gefunden');
+    }
+
+    // Prüfen ob Assets existieren
+    const assetsPath = path.join(__dirname, 'assets');
+    if (!fs.existsSync(assetsPath)) {
+      log('Assets-Ordner nicht gefunden:', assetsPath);
+    } else {
+      log('Assets-Ordner gefunden:', assetsPath);
+      const files = fs.readdirSync(assetsPath);
+      log('Assets-Dateien:', files);
     }
 
     mainWindow.loadFile(htmlPath);
@@ -69,6 +81,15 @@ async function createWindow() {
       log('HTML-Datei erfolgreich geladen und gerendert');
     });
 
+    // Zusätzliche Fehlerbehandlung für Ressourcen
+    mainWindow.webContents.on('did-fail-provisional-load', (event, errorCode, errorDescription) => {
+      log('Fehler beim provisorischen Laden:', errorCode, errorDescription);
+    });
+
+    mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+      log(`Console [${level}]: ${message} (${sourceId}:${line})`);
+    });
+
   } catch (error) {
     log('Fehler beim Erstellen des Fensters:', error);
     app.quit();
@@ -76,29 +97,45 @@ async function createWindow() {
 }
 
 async function initializeDatabase() {
-  const { Low } = await import('lowdb');
-  const { JSONFile } = await import('lowdb/node');
-  const dbPath = path.join(__dirname, 'pflege_planner.json');
-  
-  // Prüfen ob JSON-Datei existiert
-  const fileExists = require('fs').existsSync(dbPath);
-  
-  const adapter = new JSONFile(dbPath);
-  db = new Low(adapter, {
-    schools: [],
-    companies: [],
-    students: [],
-    weeks: []
-  });
-  await db.read();
-  await db.write();
-  
-  // Seed-Daten hinzufügen wenn JSON-Datei nicht existiert
-  if (!fileExists) {
-    log('JSON-Datei nicht gefunden. Initialisiere Datenbank mit Seed-Daten...');
-    await seedDatabase();
-  } else {
-    log('Datenbank bereits initialisiert');
+  try {
+    log('Initialisiere Datenbank...');
+    const { Low } = await import('lowdb');
+    const { JSONFile } = await import('lowdb/node');
+    const dbPath = path.join(__dirname, 'pflege_planner.json');
+    
+    log('Datenbank-Pfad:', dbPath);
+    
+    // Prüfen ob Verzeichnis existiert
+    const dirPath = path.dirname(dbPath);
+    if (!fs.existsSync(dirPath)) {
+      log('Verzeichnis nicht gefunden, erstelle:', dirPath);
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
+    
+    // Prüfen ob JSON-Datei existiert
+    const fileExists = fs.existsSync(dbPath);
+    log('JSON-Datei existiert:', fileExists);
+    
+    const adapter = new JSONFile(dbPath);
+    db = new Low(adapter, {
+      schools: [],
+      companies: [],
+      students: [],
+      weeks: []
+    });
+    await db.read();
+    await db.write();
+    
+    // Seed-Daten hinzufügen wenn JSON-Datei nicht existiert
+    if (!fileExists) {
+      log('JSON-Datei nicht gefunden. Initialisiere Datenbank mit Seed-Daten...');
+      await seedDatabase();
+    } else {
+      log('Datenbank bereits initialisiert');
+    }
+  } catch (error) {
+    log('Fehler bei der Datenbank-Initialisierung:', error);
+    throw error;
   }
 }
 
